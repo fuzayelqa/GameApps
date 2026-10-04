@@ -1,0 +1,6 @@
+{
+  "name": "Snake Game",
+  "description": "Modern arcade Snake game with guest mode, cloud sync, customizable skins and themes, records, and responsive controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

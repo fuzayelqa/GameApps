@@ -1,0 +1,8 @@
+{
+  "firestore": [
+    {
+      "database": "ai-studio-android-snakegam-43032002-d9ea-42c6-aa53-89d4bc810be2",
+      "rules": "firestore.rules"
+    }
+  ]
+}

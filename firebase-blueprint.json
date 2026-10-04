@@ -1,0 +1,86 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile and account metadata",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "isPremium": { "type": "boolean" },
+        "createdAt": { "type": "integer" },
+        "updatedAt": { "type": "integer" }
+      },
+      "required": ["userId", "email"]
+    },
+    "GameStatistics": {
+      "title": "GameStatistics",
+      "description": "Aggregated user game statistics and records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "highScore": { "type": "integer" },
+        "highestLevel": { "type": "integer" },
+        "longestSnake": { "type": "integer" },
+        "totalGames": { "type": "integer" },
+        "foodCollected": { "type": "integer" },
+        "bestGameTimeSeconds": { "type": "integer" },
+        "updatedAt": { "type": "integer" }
+      },
+      "required": ["userId", "highScore"]
+    },
+    "GameRecord": {
+      "title": "GameRecord",
+      "description": "Individual game record for game history",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "score": { "type": "integer" },
+        "level": { "type": "integer" },
+        "snakeLength": { "type": "integer" },
+        "foodCollected": { "type": "integer" },
+        "gameDurationSeconds": { "type": "integer" },
+        "gameMode": { "type": "string" },
+        "timestamp": { "type": "integer" }
+      },
+      "required": ["id", "userId", "score", "level"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User synchronized settings and preferences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "controlType": { "type": "string" },
+        "difficulty": { "type": "string" },
+        "vibrationEnabled": { "type": "boolean" },
+        "soundEnabled": { "type": "boolean" },
+        "musicEnabled": { "type": "boolean" },
+        "theme": { "type": "string" },
+        "snakeSkin": { "type": "string" },
+        "updatedAt": { "type": "integer" }
+      },
+      "required": ["userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Stores user profile information"
+    },
+    "/users/{userId}/statistics/stats": {
+      "schema": "GameStatistics",
+      "description": "Stores user career statistics"
+    },
+    "/users/{userId}/records/{recordId}": {
+      "schema": "GameRecord",
+      "description": "Stores game history entries"
+    },
+    "/users/{userId}/settings/prefs": {
+      "schema": "UserSettings",
+      "description": "Stores user settings"
+    }
+  }
+}
