@@ -54,6 +54,8 @@ import com.example.data.models.CardBrand
 import com.example.data.models.PaymentCard
 import com.example.ui.components.GamingButton
 import com.example.ui.theme.NeonGreen
+import com.example.utils.CardValidationResult
+import com.example.utils.CardValidator
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -347,27 +349,41 @@ fun AddCardDialog(
                     Button(
                         onClick = {
                             val digits = rawCardNumber.filter { it.isDigit() }
-                            if (digits.length < 15) {
-                                errorMessage = "Please enter a valid 15 or 16-digit card number."
-                                return@Button
+
+                            // 1. Full Real Card Number Check (Luhn algorithm & IIN/BIN)
+                            when (val numResult = CardValidator.validateCardNumber(digits)) {
+                                is CardValidationResult.Invalid -> {
+                                    errorMessage = numResult.message
+                                    return@Button
+                                }
+                                CardValidationResult.Valid -> {}
                             }
-                            if (cardHolderName.trim().length < 3) {
-                                errorMessage = "Please enter the cardholder's name."
-                                return@Button
+
+                            // 2. Cardholder Name Check
+                            when (val nameResult = CardValidator.validateCardholderName(cardHolderName)) {
+                                is CardValidationResult.Invalid -> {
+                                    errorMessage = nameResult.message
+                                    return@Button
+                                }
+                                CardValidationResult.Valid -> {}
                             }
-                            if (rawExpiry.length < 5 || !rawExpiry.contains("/")) {
-                                errorMessage = "Please enter expiry date in MM/YY format."
-                                return@Button
+
+                            // 3. Expiry Date Check
+                            when (val expResult = CardValidator.validateExpiry(rawExpiry)) {
+                                is CardValidationResult.Invalid -> {
+                                    errorMessage = expResult.message
+                                    return@Button
+                                }
+                                CardValidationResult.Valid -> {}
                             }
-                            val parts = rawExpiry.split("/")
-                            val month = parts.getOrNull(0)?.toIntOrNull() ?: 0
-                            if (month !in 1..12) {
-                                errorMessage = "Invalid expiry month (01 - 12)."
-                                return@Button
-                            }
-                            if (cvv.length < 3) {
-                                errorMessage = "Please enter a valid 3 or 4-digit CVV."
-                                return@Button
+
+                            // 4. CVV / CVC Check
+                            when (val cvvResult = CardValidator.validateCvv(cvv, detectedBrand)) {
+                                is CardValidationResult.Invalid -> {
+                                    errorMessage = cvvResult.message
+                                    return@Button
+                                }
+                                CardValidationResult.Valid -> {}
                             }
 
                             val last4 = digits.takeLast(4)

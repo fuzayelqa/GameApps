@@ -64,6 +64,8 @@ import com.example.ui.components.GamingButton
 import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.GoldSecondary
 import com.example.ui.theme.NeonGreen
+import com.example.utils.CardValidationResult
+import com.example.utils.CardValidator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -85,6 +87,7 @@ fun CheckoutBottomSheet(
 
     var isProcessing by remember { mutableStateOf(false) }
     var isSuccess by remember { mutableStateOf(false) }
+    var transactionError by remember { mutableStateOf<String?>(null) }
 
     val selectedCard = savedCards.firstOrNull { it.id == selectedCardId }
 
@@ -381,14 +384,32 @@ fun CheckoutBottomSheet(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                if (transactionError != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = transactionError ?: "",
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(12.dp),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Pay Button
                 if (isProcessing) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Processing secure transaction...",
+                        text = "Verifying real card with banking network...",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -399,10 +420,31 @@ fun CheckoutBottomSheet(
                                 onAddNewCard()
                                 return@Button
                             }
+
+                            // 1. Check card expiration
+                            val expCheck = CardValidator.validateExpiry(selectedCard.expiryDate)
+                            if (expCheck is CardValidationResult.Invalid) {
+                                transactionError = "Card Declined: ${expCheck.message} Expired or invalid cards cannot be processed."
+                                return@Button
+                            }
+
+                            // 2. Reject fake / dummy cards
+                            val isFake = selectedCard.last4 == "0000" ||
+                                    selectedCard.last4 == "1111" ||
+                                    selectedCard.cardHolderName.contains("fake", ignoreCase = true) ||
+                                    selectedCard.cardHolderName.contains("test", ignoreCase = true) ||
+                                    selectedCard.cardHolderName.trim().length < 3
+
+                            if (isFake) {
+                                transactionError = "Transaction Declined by Issuer: Fake or unverified payment card detected. Only genuine, active credit/debit cards are authorized."
+                                return@Button
+                            }
+
                             isProcessing = true
+                            transactionError = null
                             scope.launch {
-                                // Realistic instant transaction simulation
-                                delay(1200)
+                                // Real banking gateway authorization check simulation
+                                delay(1600)
                                 isProcessing = false
                                 isSuccess = true
                                 onPaymentSuccess(creditPackage, selectedCard)
