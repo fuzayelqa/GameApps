@@ -80,6 +80,9 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -103,8 +106,10 @@ fun LoginScreen(
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -119,7 +124,7 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "SIGN IN",
@@ -131,15 +136,160 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Sync your high scores and progress across all devices",
+                text = "Sign in with Email or Google to sync scores & unlocked skins",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp, bottom = 24.dp),
+                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
                 textAlign = TextAlign.Center
             )
 
-            // Primary Recommended Method: Google Sign-In
+            // Email Field
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    email = it
+                    errorMessage = null
+                },
+                label = { Text("Email Address") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("login_email_input"),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Password Field
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    errorMessage = null
+                },
+                label = { Text("Password") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("login_password_input"),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Forgot Password link
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = onNavigateToForgotPassword,
+                    modifier = Modifier.testTag("forgot_password_button")
+                ) {
+                    Text(
+                        text = "Forgot Password?",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Email Sign-In Button
             Button(
+                onClick = {
+                    if (email.isBlank() || password.isBlank()) {
+                        errorMessage = "Please enter both email and password."
+                        return@Button
+                    }
+                    isLoading = true
+                    errorMessage = null
+                    scope.launch {
+                        val res = authManager.loginWithEmail(email, password)
+                        isLoading = false
+                        if (res.isFailure) {
+                            errorMessage = res.exceptionOrNull()?.localizedMessage ?: "Sign-in failed."
+                        }
+                    }
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("login_submit_button"),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.5.dp
+                    )
+                } else {
+                    Text(
+                        text = "SIGN IN",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Divider OR
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+                Text(
+                    text = "  OR  ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Google Sign-In
+            OutlinedButton(
                 onClick = {
                     isLoading = true
                     errorMessage = null
@@ -156,116 +306,88 @@ fun LoginScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(52.dp)
                     .testTag("google_sign_in_button"),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Sign in with Google",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Guest Option
             OutlinedButton(
                 onClick = onContinueAsGuest,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(48.dp)
                     .testTag("continue_as_guest_button"),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Text(
                     text = "Play as Guest (Offline)",
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Cloud Benefits Card
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "ACCOUNT BENEFITS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 1.sp
-                    )
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("☁️", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Automatic cloud backup for your high scores & stats",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("💳", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Sync your Credit Store balance and unlocked skins",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🏆", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Global leaderboards and cross-device recovery",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
             }
 
             if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(14.dp))
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = errorMessage ?: "",
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(10.dp),
+                        modifier = Modifier.padding(12.dp),
                         textAlign = TextAlign.Center
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Register Link
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Don't have an account?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                TextButton(
+                    onClick = onNavigateToRegister,
+                    modifier = Modifier.testTag("go_to_register_button")
+                ) {
+                    Text(
+                        text = "SIGN UP",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -278,6 +400,12 @@ fun RegisterScreen(
     onBack: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -291,8 +419,10 @@ fun RegisterScreen(
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -306,7 +436,7 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "CREATE ACCOUNT",
@@ -318,15 +448,192 @@ fun RegisterScreen(
             )
 
             Text(
-                text = "Sign in with Google for instant cloud sync, or use email",
+                text = "Register with Email or Google to sync scores and wallet",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp, bottom = 24.dp),
+                modifier = Modifier.padding(top = 4.dp, bottom = 20.dp),
                 textAlign = TextAlign.Center
             )
 
-            // Recommended Google Sign In
+            // Email Field
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    email = it
+                    errorMessage = null
+                },
+                label = { Text("Email Address") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_email_input"),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Password Field
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    errorMessage = null
+                },
+                label = { Text("Password (min. 6 characters)") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_password_input"),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Confirm Password Field
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = {
+                    confirmPassword = it
+                    errorMessage = null
+                },
+                label = { Text("Confirm Password") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingIcon = {
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(
+                            imageVector = if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
+                        )
+                    }
+                },
+                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("register_confirm_password_input"),
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Email Create Account Button
             Button(
+                onClick = {
+                    val trimmedEmail = email.trim()
+                    if (trimmedEmail.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                        errorMessage = "Please fill in all fields."
+                        return@Button
+                    }
+                    if (!trimmedEmail.contains("@") || !trimmedEmail.contains(".")) {
+                        errorMessage = "Please enter a valid email address."
+                        return@Button
+                    }
+                    if (password.length < 6) {
+                        errorMessage = "Password must be at least 6 characters."
+                        return@Button
+                    }
+                    if (password != confirmPassword) {
+                        errorMessage = "Passwords do not match."
+                        return@Button
+                    }
+
+                    isLoading = true
+                    errorMessage = null
+                    scope.launch {
+                        val res = authManager.registerWithEmail(trimmedEmail, password)
+                        isLoading = false
+                        if (res.isSuccess) {
+                            onRegisterSuccess(trimmedEmail)
+                        } else {
+                            errorMessage = res.exceptionOrNull()?.localizedMessage ?: "Registration failed."
+                        }
+                    }
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("register_submit_button"),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.5.dp
+                    )
+                } else {
+                    Text(
+                        text = "CREATE ACCOUNT",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Divider OR
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+                Text(
+                    text = "  OR  ",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Sign Up with Google
+            OutlinedButton(
                 onClick = {
                     isLoading = true
                     errorMessage = null
@@ -345,79 +652,24 @@ fun RegisterScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp)
+                    .height(52.dp)
                     .testTag("register_google_sign_in_button"),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = null,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Sign up with Google",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Cloud Benefits Card
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "1-TAP ACCOUNT CREATION",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 1.sp
-                    )
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("⚡", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "No password needed — instant Google account linkage",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("☁️", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Backs up high scores, settings, and credit wallet",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🔒", fontSize = 18.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "Protected by Google Identity and zero-trust security",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 }
             }
 
@@ -425,15 +677,14 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(14.dp))
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = errorMessage ?: "",
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(10.dp),
+                        modifier = Modifier.padding(12.dp),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -462,6 +713,8 @@ fun RegisterScreen(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

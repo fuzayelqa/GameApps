@@ -10,6 +10,10 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,15 +112,71 @@ class AuthManager(
     }
 
     suspend fun registerWithEmail(email: String, pass: String): Result<FirebaseUser> {
-        val friendlyMsg = "Email/Password registration is disabled in Firebase for this project. Please use 'Sign in with Google' for instant cloud sync."
-        _authState.value = AuthState.Error(friendlyMsg)
-        return Result.failure(Exception(friendlyMsg))
+        _authState.value = AuthState.Loading
+        return try {
+            val authResult = auth.createUserWithEmailAndPassword(email.trim(), pass).await()
+            val user = authResult.user ?: throw IllegalStateException("User creation failed, user is null")
+            try {
+                user.sendEmailVerification().await()
+            } catch (vEx: Exception) {
+                Log.w(TAG, "Email verification send failed on register", vEx)
+            }
+            _authState.value = AuthState.Authenticated(user)
+            Result.success(user)
+        } catch (e: Exception) {
+            Log.e(TAG, "Registration with email failed", e)
+            val friendlyMsg = when (e) {
+                is FirebaseAuthUserCollisionException -> "An account with this email address already exists."
+                is FirebaseAuthWeakPasswordException -> "Password is too weak. Please use at least 6 characters."
+                is FirebaseAuthInvalidCredentialsException -> "The email address is improperly formatted."
+                else -> {
+                    if (e.message?.contains("network", ignoreCase = true) == true) {
+                        "Network error. Please check your internet connection."
+                    } else if (e.message?.contains("CONFIGURATION_NOT_FOUND", ignoreCase = true) == true ||
+                               e.message?.contains("OPERATION_NOT_ALLOWED", ignoreCase = true) == true) {
+                        "Email/Password sign-in is not enabled in Firebase Console. Please enable Email/Password under Authentication > Sign-in method in Firebase Console."
+                    } else {
+                        e.localizedMessage ?: "Registration failed. Please check details and try again."
+                    }
+                }
+            }
+            _authState.value = AuthState.Error(friendlyMsg)
+            Result.failure(Exception(friendlyMsg))
+        }
     }
 
     suspend fun loginWithEmail(email: String, pass: String): Result<FirebaseUser> {
-        val friendlyMsg = "Email/Password sign-in is disabled in Firebase for this project. Please use 'Sign in with Google' for instant cloud sync."
-        _authState.value = AuthState.Error(friendlyMsg)
-        return Result.failure(Exception(friendlyMsg))
+        _authState.value = AuthState.Loading
+        return try {
+            val authResult = auth.signInWithEmailAndPassword(email.trim(), pass).await()
+            val user = authResult.user ?: throw IllegalStateException("Sign in failed, user is null")
+            _authState.value = AuthState.Authenticated(user)
+            Result.success(user)
+        } catch (e: Exception) {
+            Log.e(TAG, "Login with email failed", e)
+            val friendlyMsg = when (e) {
+                is FirebaseAuthInvalidUserException -> "No account found with this email. Please sign up first."
+                is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password. Please try again."
+                else -> {
+                    if (e.message?.contains("network", ignoreCase = true) == true) {
+                        "Network error. Please check your internet connection."
+                    } else if (e.message?.contains("CONFIGURATION_NOT_FOUND", ignoreCase = true) == true ||
+                               e.message?.contains("OPERATION_NOT_ALLOWED", ignoreCase = true) == true) {
+                        "Email/Password sign-in is not enabled in Firebase Console. Please enable Email/Password under Authentication > Sign-in method in Firebase Console."
+                    } else {
+                        e.localizedMessage ?: "Sign-in failed. Please try again."
+                    }
+                }
+            }
+            _authState.value = AuthState.Error(friendlyMsg)
+            Result.failure(Exception(friendlyMsg))
+        }
+    }
+
+    fun clearError() {
+        if (_authState.value is AuthState.Error) {
+            _authState.value = if (auth.currentUser != null) AuthState.Authenticated(auth.currentUser!!) else AuthState.Guest
+        }
     }
 
     suspend fun sendPasswordReset(email: String): Result<Unit> {
