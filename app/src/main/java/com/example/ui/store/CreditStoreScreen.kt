@@ -3,7 +3,6 @@ package com.example.ui.store
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,46 +13,44 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,8 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,10 +74,11 @@ import com.example.data.models.StorePerkItem
 import com.example.data.preferences.SettingsPreferences
 import com.example.sound.SoundManager
 import com.example.sound.VibrationManager
-import com.example.ui.components.GamingButton
-import com.example.ui.theme.GoldContainer
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.GoldSecondary
+import com.example.ui.components.CosmicStoreBackground
+import com.example.ui.components.SciFiGold
+import com.example.ui.components.SciFiNeonCyan
+import com.example.ui.components.SciFiPackageCard
+import com.example.ui.components.SciFiTechPanel
 import com.example.ui.theme.NeonGreen
 import kotlinx.coroutines.launch
 
@@ -102,407 +100,142 @@ fun CreditStoreScreen(
     val doubleScorePasses by preferences.doubleScorePassesFlow.collectAsState(initial = 0)
     val currentSkin by preferences.snakeSkinFlow.collectAsState(initial = com.example.data.models.SnakeSkin.CLASSIC)
 
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabTitles = listOf("PACKAGES", "PERKS & SKINS", "SAVED CARDS")
-
     var showAddCardDialog by remember { mutableStateOf(false) }
     var selectedPackageForCheckout by remember { mutableStateOf<CreditPackage?>(null) }
+    var showPerksSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "CREDIT STORE",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = 1.sp
-                                ),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        // Glowing Coin Balance Pill
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = GoldContainer.copy(alpha = 0.8f),
-                            border = BorderStroke(1.5.dp, GoldPrimary),
-                            modifier = Modifier.testTag("store_credit_balance_pill")
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.MonetizationOn,
-                                    contentDescription = null,
-                                    tint = GoldPrimary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "$creditBalance",
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 15.sp,
-                                    color = GoldPrimary
-                                )
-                            }
-                        }
-                    }
-
-                    // Tab Row
-                    TabRow(
-                        selectedTabIndex = selectedTab,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        indicator = { tabPositions ->
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    ) {
-                        tabTitles.forEachIndexed { index, title ->
-                            Tab(
-                                selected = selectedTab == index,
-                                onClick = { selectedTab = index },
-                                text = {
-                                    Text(
-                                        text = title,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        containerColor = Color.Black
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when (selectedTab) {
-                0 -> {
-                    // TAB 1: CREDIT PACKAGES
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        item {
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CreditCard,
-                                        contentDescription = null,
-                                        tint = NeonGreen,
-                                        modifier = Modifier.size(28.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column {
-                                        Text(
-                                            text = "Buy Credits with Credit or Debit Card",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "Add your card once to enjoy 1-tap checkout. Credits never expire.",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
+            // 1. Cosmic Deep Space Background matching the uploaded design
+            CosmicStoreBackground()
 
-                        items(DEFAULT_CREDIT_PACKAGES) { pack ->
-                            CreditPackageCard(
-                                pack = pack,
-                                onBuyClick = {
-                                    selectedPackageForCheckout = pack
-                                }
-                            )
-                        }
+            // 2. Main Store Interface matching screenshot
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Top Bar with Optional Perks/Inventory shortcut
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { showPerksSheet = true },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .testTag("open_perks_sheet_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ColorLens,
+                            contentDescription = "Skins & Perks",
+                            tint = SciFiNeonCyan.copy(alpha = 0.85f),
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 }
 
-                1 -> {
-                    // TAB 2: PERKS & SKINS
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        item {
-                            // Inventory Summary Card
-                            Surface(
-                                shape = RoundedCornerShape(16.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(14.dp),
-                                    horizontalArrangement = Arrangement.SpaceAround
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Revive Shields", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text("$revivePasses", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = NeonGreen)
-                                    }
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Score Doublers", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text("$doubleScorePasses", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = GoldPrimary)
-                                    }
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text("Skins Unlocked", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text("${unlockedPerks.count { it.startsWith("perk_skin") }} / 3", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                    }
-                                }
-                            }
-                        }
+                // Header: CREDIT STORE (Bold Golden Yellow)
+                Text(
+                    text = "CREDIT STORE",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.5.sp,
+                        shadow = Shadow(
+                            color = Color(0xFFCC8800),
+                            blurRadius = 14f
+                        )
+                    ),
+                    color = Color(0xFFFFD000),
+                    fontSize = 32.sp,
+                    textAlign = TextAlign.Center
+                )
 
-                        items(STORE_PERK_ITEMS) { perk ->
-                            val isUnlocked = unlockedPerks.contains(perk.id)
-                            val isEquipped = perk.associatedSkin != null && currentSkin == perk.associatedSkin
+                Spacer(modifier = Modifier.height(4.dp))
 
-                            PerkItemCard(
-                                perk = perk,
-                                isUnlocked = isUnlocked,
-                                isEquipped = isEquipped,
-                                userCredits = creditBalance,
-                                onRedeem = {
-                                    scope.launch {
-                                        if (creditBalance < perk.costCredits) {
-                                            snackbarHostState.showSnackbar("Not enough credits! Purchase a credit package first.")
-                                            return@launch
-                                        }
+                // Subtitle: YOUR CREDIT: 20 (Cyan glow)
+                Text(
+                    text = "YOUR CREDIT: $creditBalance",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 1.sp,
+                        shadow = Shadow(
+                            color = SciFiNeonCyan,
+                            blurRadius = 16f
+                        )
+                    ),
+                    color = SciFiNeonCyan,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.testTag("store_credit_balance_display")
+                )
 
-                                        val success = preferences.spendCredits(perk.costCredits)
-                                        if (success) {
-                                            soundManager.playPurchaseSuccess()
-                                            vibrationManager.vibrateLevelUp()
+                Spacer(modifier = Modifier.height(14.dp))
 
-                                            when (perk.id) {
-                                                "perk_revive_shields_3" -> preferences.addReviveShields(3)
-                                                "perk_double_score_5" -> preferences.addDoubleScorePasses(5)
-                                                else -> {
-                                                    preferences.unlockPerk(perk.id)
-                                                    if (perk.associatedSkin != null) {
-                                                        preferences.setSnakeSkin(perk.associatedSkin)
-                                                    }
-                                                }
-                                            }
-                                            snackbarHostState.showSnackbar("Unlocked: ${perk.name}!")
-                                        }
-                                    }
-                                },
-                                onEquip = {
-                                    if (perk.associatedSkin != null) {
-                                        scope.launch {
-                                            preferences.setSnakeSkin(perk.associatedSkin)
-                                            soundManager.playButtonClick()
-                                            snackbarHostState.showSnackbar("Equipped: ${perk.name}")
-                                        }
-                                    }
-                                }
-                            )
-                        }
+                // 2-Column Grid of 12 Sci-Fi Credit Packages
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(top = 4.dp, bottom = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(DEFAULT_CREDIT_PACKAGES) { pack ->
+                        val isSpecial = pack.id == "pack_10000"
+                        SciFiPackageCard(
+                            creditsText = pack.name,
+                            priceText = pack.priceUsd,
+                            isSpecial = isSpecial,
+                            onClick = {
+                                soundManager.playButtonClick()
+                                selectedPackageForCheckout = pack
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "buy_pack_${pack.id}"
+                        )
                     }
                 }
 
-                2 -> {
-                    // TAB 3: SAVED CARDS
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Your Saved Cards",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = "Use for instant 1-tap credit package top-ups",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                Spacer(modifier = Modifier.height(6.dp))
 
-                                Button(
-                                    onClick = { showAddCardDialog = true },
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary
-                                    ),
-                                    modifier = Modifier.testTag("add_card_button")
-                                ) {
-                                    Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Add Card", fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        if (savedCards.isEmpty()) {
-                            item {
-                                Surface(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 32.dp),
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(32.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(64.dp)
-                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.CreditCard,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(36.dp)
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.height(16.dp))
-
-                                        Text(
-                                            text = "No Payment Cards Added Yet",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-
-                                        Spacer(modifier = Modifier.height(8.dp))
-
-                                        Text(
-                                            text = "Add a credit or debit card to instantly purchase credits and unlock exclusive skins and perks.",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            textAlign = TextAlign.Center
-                                        )
-
-                                        Spacer(modifier = Modifier.height(20.dp))
-
-                                        GamingButton(
-                                            text = "ADD YOUR FIRST CARD",
-                                            onClick = { showAddCardDialog = true },
-                                            testTag = "empty_add_card_cta"
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            items(savedCards) { card ->
-                                Column(modifier = Modifier.fillMaxWidth()) {
-                                    CreditCardView(
-                                        card = card,
-                                        modifier = Modifier.padding(bottom = 8.dp)
-                                    )
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 4.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        if (!card.isDefault) {
-                                            OutlinedButton(
-                                                onClick = {
-                                                    scope.launch {
-                                                        preferences.setDefaultCard(card.id)
-                                                        snackbarHostState.showSnackbar("Default card updated")
-                                                    }
-                                                },
-                                                shape = RoundedCornerShape(10.dp)
-                                            ) {
-                                                Text("Set as Default", fontSize = 12.sp)
-                                            }
-                                        } else {
-                                            Text(
-                                                text = "✓ Default Card for Top-ups",
-                                                color = GoldPrimary,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 12.sp
-                                            )
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                scope.launch {
-                                                    preferences.deleteCard(card.id)
-                                                    snackbarHostState.showSnackbar("Card removed")
-                                                }
-                                            }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Delete,
-                                                contentDescription = "Delete Card",
-                                                tint = MaterialTheme.colorScheme.error
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                // Bottom BACK Button matching screenshot
+                SciFiTechPanel(
+                    modifier = Modifier
+                        .width(160.dp)
+                        .height(48.dp)
+                        .padding(bottom = 6.dp),
+                    onClick = {
+                        soundManager.playButtonClick()
+                        onBack()
+                    },
+                    testTag = "store_back_button"
+                ) {
+                    Text(
+                        text = "BACK",
+                        color = Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 16.sp,
+                        letterSpacing = 1.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(6.dp))
             }
         }
     }
@@ -516,7 +249,7 @@ fun CreditStoreScreen(
                 scope.launch {
                     preferences.saveCard(newCard)
                     soundManager.playButtonClick()
-                    snackbarHostState.showSnackbar("Card successfully saved!")
+                    snackbarHostState.showSnackbar("Payment card successfully added!")
                 }
             }
         )
@@ -538,133 +271,101 @@ fun CreditStoreScreen(
                     soundManager.playPurchaseSuccess()
                     vibrationManager.vibrateNewRecord()
                     snackbarHostState.showSnackbar(
-                        "Success! Added ${purchasedPack.totalCredits} Credits with ${cardUsed.cardBrand.displayName} •••• ${cardUsed.last4}"
+                        "Added ${purchasedPack.totalCredits} Credits! (Charged to •••• ${cardUsed.last4})"
                     )
                 }
             }
         )
     }
-}
 
-@Composable
-fun CreditPackageCard(
-    pack: CreditPackage,
-    onBuyClick: () -> Unit
-) {
-    val isHighlighted = pack.isPopular || pack.isBestValue
-
-    val borderStroke = when {
-        pack.isBestValue -> BorderStroke(2.dp, GoldPrimary)
-        pack.isPopular -> BorderStroke(2.dp, NeonGreen)
-        else -> BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-    }
-
-    val cardBg = if (isHighlighted) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-    }
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onBuyClick() },
-        shape = RoundedCornerShape(18.dp),
-        color = cardBg,
-        border = borderStroke
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Top Badge if any
-            if (pack.tag != null) {
+    // Perks & Skins Sheet (Access skins and powerups)
+    if (showPerksSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showPerksSheet = false },
+            containerColor = Color(0xFF07111E),
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 36.dp)
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (pack.isBestValue) GoldPrimary else if (pack.isPopular) NeonGreen else MaterialTheme.colorScheme.primary
-                    ) {
-                        Text(
-                            text = pack.tag,
-                            color = Color.Black,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .background(
-                                Brush.linearGradient(
-                                    if (pack.isBestValue) listOf(GoldPrimary, GoldSecondary)
-                                    else listOf(NeonGreen, Color(0xFF00B0FF))
-                                ),
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.MonetizationOn,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column {
-                        Text(
-                            text = pack.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "${pack.credits} Credits",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = GoldPrimary
-                            )
-                            if (pack.bonusCredits > 0) {
-                                Text(
-                                    text = " +${pack.bonusCredits} Free",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = NeonGreen
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Buy Price Button
-                Button(
-                    onClick = onBuyClick,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (pack.isBestValue) GoldPrimary else MaterialTheme.colorScheme.primary,
-                        contentColor = if (pack.isBestValue) Color.Black else MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier.testTag("buy_pack_${pack.id}")
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = pack.priceUsd,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 14.sp
+                        text = "SKINS & PERKS",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = SciFiNeonCyan
                     )
+                    IconButton(onClick = { showPerksSheet = false }) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                    }
+                }
+
+                Text(
+                    text = "Your Balance: $creditBalance Credits",
+                    color = SciFiGold,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(STORE_PERK_ITEMS) { perk ->
+                        val isUnlocked = unlockedPerks.contains(perk.id)
+                        val isEquipped = perk.associatedSkin != null && currentSkin == perk.associatedSkin
+
+                        PerkItemCard(
+                            perk = perk,
+                            isUnlocked = isUnlocked,
+                            isEquipped = isEquipped,
+                            userCredits = creditBalance,
+                            onRedeem = {
+                                scope.launch {
+                                    if (creditBalance < perk.costCredits) {
+                                        snackbarHostState.showSnackbar("Not enough credits! Purchase a credit package first.")
+                                        return@launch
+                                    }
+
+                                    val success = preferences.spendCredits(perk.costCredits)
+                                    if (success) {
+                                        soundManager.playPurchaseSuccess()
+                                        vibrationManager.vibrateLevelUp()
+
+                                        when (perk.id) {
+                                            "perk_revive_shields_3" -> preferences.addReviveShields(3)
+                                            "perk_double_score_5" -> preferences.addDoubleScorePasses(5)
+                                            else -> {
+                                                preferences.unlockPerk(perk.id)
+                                                if (perk.associatedSkin != null) {
+                                                    preferences.setSnakeSkin(perk.associatedSkin)
+                                                }
+                                            }
+                                        }
+                                        snackbarHostState.showSnackbar("Unlocked: ${perk.name}!")
+                                    }
+                                }
+                            },
+                            onEquip = {
+                                if (perk.associatedSkin != null) {
+                                    scope.launch {
+                                        preferences.setSnakeSkin(perk.associatedSkin)
+                                        soundManager.playButtonClick()
+                                        snackbarHostState.showSnackbar("Equipped: ${perk.name}")
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -683,13 +384,13 @@ fun PerkItemCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        color = Color(0x660B1C30),
+        border = BorderStroke(1.dp, SciFiNeonCyan.copy(alpha = 0.35f))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -699,12 +400,12 @@ fun PerkItemCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(46.dp)
+                        .size(44.dp)
                         .background(
                             when (perk.category) {
-                                PerkCategory.SKIN -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                PerkCategory.SKIN -> SciFiNeonCyan.copy(alpha = 0.2f)
                                 PerkCategory.POWERUP -> NeonGreen.copy(alpha = 0.2f)
-                                PerkCategory.ARENA -> GoldPrimary.copy(alpha = 0.2f)
+                                PerkCategory.ARENA -> SciFiGold.copy(alpha = 0.2f)
                             },
                             CircleShape
                         ),
@@ -718,9 +419,9 @@ fun PerkItemCard(
                         },
                         contentDescription = null,
                         tint = when (perk.category) {
-                            PerkCategory.SKIN -> MaterialTheme.colorScheme.primary
+                            PerkCategory.SKIN -> SciFiNeonCyan
                             PerkCategory.POWERUP -> NeonGreen
-                            PerkCategory.ARENA -> GoldPrimary
+                            PerkCategory.ARENA -> SciFiGold
                         },
                         modifier = Modifier.size(24.dp)
                     )
@@ -733,26 +434,26 @@ fun PerkItemCard(
                         text = perk.name,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = Color.White
                     )
                     Text(
                         text = perk.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = Color(0xFFA0B4C8),
                         fontSize = 11.sp
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.MonetizationOn,
                             contentDescription = null,
-                            tint = GoldPrimary,
-                            modifier = Modifier.size(14.dp)
+                            tint = SciFiGold,
+                            modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "${perk.costCredits} Credits",
-                            color = GoldPrimary,
+                            color = SciFiGold,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.sp
                         )
@@ -782,14 +483,14 @@ fun PerkItemCard(
                     onClick = onEquip,
                     shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("EQUIP", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("EQUIP", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SciFiNeonCyan)
                 }
             } else {
                 Button(
                     onClick = onRedeem,
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (userCredits >= perk.costCredits) GoldPrimary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        containerColor = if (userCredits >= perk.costCredits) SciFiGold else Color.Gray.copy(alpha = 0.3f),
                         contentColor = Color.Black
                     ),
                     modifier = Modifier.testTag("redeem_${perk.id}")

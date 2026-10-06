@@ -28,6 +28,19 @@ import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        init {
+            try {
+                android.system.Os.setenv("LIBGL_ALWAYS_SOFTWARE", "1", true)
+                android.system.Os.setenv("MESA_LOADER_DRIVER_OVERRIDE", "swrast", true)
+                android.system.Os.setenv("MESA_DEBUG", "0", true)
+                android.system.Os.setenv("EGL_LOG_LEVEL", "fatal", true)
+            } catch (_: Throwable) {
+                // Handled gracefully
+            }
+        }
+    }
+
     private lateinit var preferences: SettingsPreferences
     private lateinit var authManager: AuthManager
     private lateinit var billingManager: BillingManager
@@ -42,10 +55,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         try {
-            val webViewCacheDir = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/js")
-            if (!webViewCacheDir.exists()) {
-                webViewCacheDir.mkdirs()
-            }
+            val jsCacheDir = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/js")
+            if (!jsCacheDir.exists()) jsCacheDir.mkdirs()
+            val wasmCacheDir = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/wasm")
+            if (!wasmCacheDir.exists()) wasmCacheDir.mkdirs()
         } catch (_: Exception) {
             // Ignored if file creation fails
         }

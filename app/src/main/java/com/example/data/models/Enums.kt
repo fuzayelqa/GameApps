@@ -35,9 +35,9 @@ enum class ControlType(val displayName: String) {
 }
 
 enum class Difficulty(val displayName: String, val speedMultiplier: Float) {
-    EASY("Easy", 0.8f),
-    NORMAL("Normal", 1.0f),
-    HARD("Hard", 1.25f)
+    EASY("Easy", 0.75f),
+    NORMAL("Normal", 0.9f),
+    HARD("Hard", 1.15f)
 }
 
 enum class ThemeType(val displayName: String, val isPremium: Boolean) {
@@ -65,6 +65,6 @@ enum class BoardStyle(val displayName: String) {
 
 enum class FoodType(val points: Int, val isSpecial: Boolean) {
     NORMAL(10, false),
-    GOLDEN(50, true),
-    BONUS(100, true)
+    GOLDEN(10, true),
+    BONUS(10, true)
 }

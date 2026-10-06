@@ -67,51 +67,102 @@ data class StorePerkItem(
 
 val DEFAULT_CREDIT_PACKAGES = listOf(
     CreditPackage(
-        id = "pack_starter_500",
-        name = "Starter Pouch",
+        id = "pack_100",
+        name = "100 CREDITS",
+        credits = 100,
+        bonusCredits = 0,
+        priceUsd = "$1.01",
+        priceValue = 1.01
+    ),
+    CreditPackage(
+        id = "pack_200",
+        name = "200 CREDITS",
+        credits = 200,
+        bonusCredits = 0,
+        priceUsd = "$2.01",
+        priceValue = 2.01
+    ),
+    CreditPackage(
+        id = "pack_300",
+        name = "300 CREDITS",
+        credits = 300,
+        bonusCredits = 0,
+        priceUsd = "$3.01",
+        priceValue = 3.01
+    ),
+    CreditPackage(
+        id = "pack_400",
+        name = "400 CREDITS",
+        credits = 400,
+        bonusCredits = 0,
+        priceUsd = "$4.01",
+        priceValue = 4.01
+    ),
+    CreditPackage(
+        id = "pack_500",
+        name = "500 CREDITS",
         credits = 500,
         bonusCredits = 0,
-        priceUsd = "$1.99",
-        priceValue = 1.99,
-        tag = "BEGINNER"
+        priceUsd = "$5.01",
+        priceValue = 5.01
     ),
     CreditPackage(
-        id = "pack_silver_1500",
-        name = "Silver Vault",
+        id = "pack_1000",
+        name = "1000 CREDITS",
+        credits = 1000,
+        bonusCredits = 0,
+        priceUsd = "$10.01",
+        priceValue = 10.01
+    ),
+    CreditPackage(
+        id = "pack_1500",
+        name = "1500 CREDITS",
         credits = 1500,
-        bonusCredits = 250,
-        priceUsd = "$4.99",
-        priceValue = 4.99,
-        tag = "+15% BONUS"
+        bonusCredits = 0,
+        priceUsd = "$15.01",
+        priceValue = 15.01
     ),
     CreditPackage(
-        id = "pack_gold_4000",
-        name = "Golden Treasury",
+        id = "pack_2000",
+        name = "2000 CREDITS",
+        credits = 2000,
+        bonusCredits = 0,
+        priceUsd = "$20.01",
+        priceValue = 20.01
+    ),
+    CreditPackage(
+        id = "pack_3000",
+        name = "3000 CREDITS",
+        credits = 3000,
+        bonusCredits = 0,
+        priceUsd = "$30.01",
+        priceValue = 30.01
+    ),
+    CreditPackage(
+        id = "pack_4000",
+        name = "4000 CREDITS",
         credits = 4000,
-        bonusCredits = 1000,
-        priceUsd = "$9.99",
-        priceValue = 9.99,
-        isPopular = true,
-        tag = "MOST POPULAR"
+        bonusCredits = 0,
+        priceUsd = "$40.01",
+        priceValue = 40.01
     ),
     CreditPackage(
-        id = "pack_diamond_10000",
-        name = "Diamond Trove",
+        id = "pack_5000",
+        name = "5000 CREDITS",
+        credits = 5000,
+        bonusCredits = 0,
+        priceUsd = "$50.01",
+        priceValue = 50.01
+    ),
+    CreditPackage(
+        id = "pack_10000",
+        name = "10000 CREDITS",
         credits = 10000,
-        bonusCredits = 3500,
-        priceUsd = "$19.99",
-        priceValue = 19.99,
+        bonusCredits = 0,
+        priceUsd = "$99.99",
+        priceValue = 99.99,
         isBestValue = true,
-        tag = "BEST VALUE (+35%)"
-    ),
-    CreditPackage(
-        id = "pack_mythic_25000",
-        name = "Mythic Dragon Hoard",
-        credits = 25000,
-        bonusCredits = 12000,
-        priceUsd = "$39.99",
-        priceValue = 39.99,
-        tag = "WHALE PACK (+48%)"
+        tag = "WHALE"
     )
 )
 

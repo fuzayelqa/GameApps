@@ -181,18 +181,18 @@ class SnakeEngine(
         if (eatenFood != null) {
             // Snake grows: keep all current segments
             newSnake.addAll(currentSnake)
-            newScore += eatenFood.type.points
+            // Eating 1 fruit upgrades score by 10 points
+            newScore += 10
             newFoodCollected += 1
 
-            // Level progression: level up every 100 points
-            val calculatedLevel = 1 + (newScore / 100)
+            // Level progression: levels up after eating every 10 fruits (10 fruits = Level 2, 20 fruits = Level 3, etc.)
+            val calculatedLevel = 1 + (newFoodCollected / 10)
             if (calculatedLevel > newLevel) {
                 newLevel = calculatedLevel
-                newScore += 100 // Level completion bonus
                 onLevelUp?.invoke(newLevel)
 
-                // In level 4+ for Classic mode, add obstacles if desired
-                if (currentGameMode == GameMode.CLASSIC && newLevel >= 4 && currentState.obstacles.isEmpty()) {
+                // In high levels (Level 5+) for Classic mode, add obstacles if desired
+                if (currentGameMode == GameMode.CLASSIC && newLevel >= 5 && currentState.obstacles.isEmpty()) {
                     val generated = generateObstacles(newSnake)
                     currentState = currentState.copy(obstacles = generated)
                 }
@@ -331,19 +331,22 @@ class SnakeEngine(
     }
 
     fun getTickDelayMillis(): Long {
-        // Base delay decreases with level
+        // Base delay decreases smoothly with level (comfortable and easy)
         val baseSpeed = when (currentState.level) {
-            1 -> 220L
-            2 -> 190L
-            3 -> 160L
-            4 -> 135L
-            5 -> 115L
-            6 -> 100L
-            else -> maxOf(70L, 100L - ((currentState.level - 6) * 5L))
+            1 -> 250L
+            2 -> 230L
+            3 -> 215L
+            4 -> 200L
+            5 -> 185L
+            6 -> 170L
+            7 -> 160L
+            8 -> 150L
+            9 -> 140L
+            else -> maxOf(120L, 140L - ((currentState.level - 9) * 4L))
         }
 
         // Multiply by difficulty (EASY is slower / higher delay, HARD is faster / lower delay)
         val adjusted = (baseSpeed / currentDifficulty.speedMultiplier).toLong()
-        return adjusted.coerceIn(50L, 300L)
+        return adjusted.coerceIn(80L, 360L)
     }
 }

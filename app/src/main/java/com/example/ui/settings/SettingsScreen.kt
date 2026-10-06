@@ -19,11 +19,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Gamepad
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MonetizationOn
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -121,10 +137,13 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 10.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.testTag("settings_back_button")
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -143,105 +162,127 @@ fun SettingsScreen(
                 }
             }
 
-            // 1. GAMEPLAY SECTION
+            // ==========================================
+            // 1. GAMEPLAY & CONTROLS SECTION
+            // ==========================================
             item {
-                SectionTitle("GAMEPLAY")
+                SectionHeader(icon = Icons.Default.Gamepad, title = "GAMEPLAY & CONTROLS")
             }
 
             item {
                 GamingCard {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         // Control Type Selector
-                        Text(
-                            text = "Control Type",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            ControlType.entries.forEach { type ->
-                                val isSelected = controlType == type
-                                OutlinedButton(
-                                    onClick = { scope.launch { preferences.setControlType(type) } },
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                                    ),
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                                    )
-                                ) {
-                                    Text(
-                                        text = type.displayName,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                    )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "Control Type",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                ControlType.entries.forEach { type ->
+                                    val isSelected = controlType == type
+                                    OutlinedButton(
+                                        onClick = { scope.launch { preferences.setControlType(type) } },
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                                        ),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = type.displayName,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
                                 }
                             }
                         }
 
                         // Difficulty Selector
-                        Text(
-                            text = "Difficulty",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Difficulty.entries.forEach { diff ->
-                                val isSelected = difficulty == diff
-                                OutlinedButton(
-                                    onClick = { scope.launch { preferences.setDifficulty(diff) } },
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                                    ),
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                                    )
-                                ) {
-                                    Text(
-                                        text = diff.displayName,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                    )
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Game Difficulty",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Difficulty.entries.forEach { diff ->
+                                    val isSelected = difficulty == diff
+                                    OutlinedButton(
+                                        onClick = { scope.launch { preferences.setDifficulty(diff) } },
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = ButtonDefaults.outlinedButtonColors(
+                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                                        ),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = diff.displayName,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        // Switches: Vibration, Sound, Music
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
+                        // Switches: Sound, Music, Vibration
                         SettingSwitchRow(
-                            label = "Vibration",
-                            checked = vibration,
-                            onCheckedChange = { scope.launch { preferences.setVibration(it) } }
-                        )
-                        SettingSwitchRow(
+                            icon = Icons.Default.VolumeUp,
                             label = "Sound Effects",
+                            subtitle = "Eat, turn, and crash audio cues",
                             checked = sound,
                             onCheckedChange = { scope.launch { preferences.setSound(it) } }
                         )
                         SettingSwitchRow(
+                            icon = Icons.Default.MusicNote,
                             label = "Background Music",
+                            subtitle = "Arcade soundtrack during game",
                             checked = music,
                             onCheckedChange = { scope.launch { preferences.setMusic(it) } }
+                        )
+                        SettingSwitchRow(
+                            icon = Icons.Default.Vibration,
+                            label = "Haptic Vibration",
+                            subtitle = "Tactile feedback on turns & food",
+                            checked = vibration,
+                            onCheckedChange = { scope.launch { preferences.setVibration(it) } }
                         )
                     }
                 }
             }
 
-            // 2. APPEARANCE SECTION
+            // ==========================================
+            // 2. VISUALS & CUSTOMIZATION SECTION
+            // ==========================================
             item {
-                SectionTitle("APPEARANCE")
+                SectionHeader(icon = Icons.Default.Palette, title = "VISUALS & CUSTOMIZATION")
             }
 
             item {
@@ -249,9 +290,10 @@ fun SettingsScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         // Themes
                         Text(
-                            text = "Theme",
+                            text = "Color Theme",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             ThemeType.entries.forEach { theme ->
@@ -261,7 +303,7 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent)
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
                                         .clickable {
                                             if (isLocked) {
                                                 onNavigateToPremium()
@@ -290,11 +332,14 @@ fun SettingsScreen(
                             }
                         }
 
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
                         // Snake Skins
                         Text(
-                            text = "Snake Skin",
+                            text = "Snake Scales & Skin",
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             SnakeSkin.entries.forEach { skin ->
@@ -304,7 +349,7 @@ fun SettingsScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent)
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent)
                                         .clickable {
                                             if (isLocked) {
                                                 onNavigateToPremium()
@@ -342,12 +387,19 @@ fun SettingsScreen(
                             }
                         }
 
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+
                         // Board Style
-                        Text(
-                            text = "Board Style",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.GridOn, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Board Style",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -358,7 +410,7 @@ fun SettingsScreen(
                                     onClick = { scope.launch { preferences.setBoardStyle(style) } },
                                     modifier = Modifier.weight(1f),
                                     shape = RoundedCornerShape(10.dp),
-                                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                                    colors = ButtonDefaults.outlinedButtonColors(
                                         containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
                                     ),
                                     border = BorderStroke(
@@ -379,91 +431,16 @@ fun SettingsScreen(
                 }
             }
 
-            // 3. ACCOUNT SECTION
+            // ==========================================
+            // 3. CREDIT STORE & PURCHASES SECTION
+            // ==========================================
             item {
-                SectionTitle("ACCOUNT")
+                SectionHeader(icon = Icons.Default.MonetizationOn, title = "CREDITS & STORE")
             }
 
             item {
                 GamingCard {
                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                        when (val state = authState) {
-                            is AuthState.Authenticated -> {
-                                Text(
-                                    text = "Email: ${state.user.email ?: "Signed in user"}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "Status: ",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    if (state.user.isEmailVerified) {
-                                        Icon(Icons.Default.Verified, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Verified", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    } else {
-                                        Text("Unverified", color = MaterialTheme.colorScheme.error, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    OutlinedButton(
-                                        onClick = { showLogoutDialog = true },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(10.dp)
-                                    ) {
-                                        Text("LOG OUT", color = MaterialTheme.colorScheme.onSurface)
-                                    }
-                                    OutlinedButton(
-                                        onClick = { showDeleteAccountDialog = true },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                                            contentColor = MaterialTheme.colorScheme.error
-                                        )
-                                    ) {
-                                        Text("DELETE ACCOUNT", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
-                                    }
-                                }
-                            }
-                            else -> {
-                                Text(
-                                    text = "You are currently playing as a guest. Sign in with Google to protect your records and sync progress across devices.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Column(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    GamingButton(
-                                        text = "SIGN IN WITH GOOGLE",
-                                        onClick = onNavigateToLogin,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        testTag = "settings_google_sign_in_button"
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // STORE & PAYMENTS SECTION
-            item {
-                SectionTitle("STORE & PAYMENTS")
-            }
-
-            item {
-                GamingCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -477,7 +454,7 @@ fun SettingsScreen(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "For skins, revives, and powerups",
+                                    text = "Use credits for skins, revives, & perks",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -491,31 +468,12 @@ fun SettingsScreen(
                         }
 
                         GamingButton(
-                            text = "CREDIT STORE & CARDS",
+                            text = "CREDIT STORE",
                             onClick = onNavigateToStore,
                             isGold = true,
                             modifier = Modifier.fillMaxWidth(),
                             testTag = "settings_open_store_button"
                         )
-                    }
-                }
-            }
-
-            // 4. DATA SECTION
-            item {
-                SectionTitle("DATA")
-            }
-
-            item {
-                GamingCard {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        OutlinedButton(
-                            onClick = { showResetRecordsDialog = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text("Reset Local Records", color = MaterialTheme.colorScheme.error)
-                        }
 
                         OutlinedButton(
                             onClick = {
@@ -526,57 +484,218 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(10.dp)
                         ) {
+                            Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text("Restore Purchases", color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
                 }
             }
 
-            // 5. ABOUT SECTION
+            // ==========================================
+            // 4. DATA & STORAGE SECTION
+            // ==========================================
             item {
-                SectionTitle("ABOUT")
+                SectionHeader(icon = Icons.Default.Storage, title = "DATA & RECORDS")
             }
 
             item {
                 GamingCard {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(
+                            onClick = { showResetRecordsDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Reset Local High Scores & Records", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+
+            // ==========================================
+            // 5. ABOUT & LEGAL SECTION
+            // ==========================================
+            item {
+                SectionHeader(icon = Icons.Default.Info, title = "ABOUT")
+            }
+
+            item {
+                GamingCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { showPrivacyDialog = true }
                                 .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Privacy Policy", style = MaterialTheme.typography.bodyMedium)
-                            Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Privacy Policy", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                            Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 18.sp)
                         }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable { showTermsDialog = true }
                                 .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Terms of Service", style = MaterialTheme.typography.bodyMedium)
-                            Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Terms of Service", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                            Text("›", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 18.sp)
                         }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("App Version", style = MaterialTheme.typography.bodyMedium)
+                            Text("App Version", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
                             Text("1.0 (Production)", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         }
                     }
                 }
             }
 
+            // ==========================================
+            // 6. ACCOUNT & LOGOUT SECTION (PLACED AT THE BOTTOM!)
+            // ==========================================
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                SectionHeader(icon = Icons.Default.AccountCircle, title = "ACCOUNT")
+            }
+
+            item {
+                GamingCard {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        when (val state = authState) {
+                            is AuthState.Authenticated -> {
+                                // User info banner
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = state.user.email?.firstOrNull()?.uppercase() ?: "U",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = state.user.email ?: "Signed in user",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = "Cloud Sync Active",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (state.user.isEmailVerified) {
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Icon(
+                                                    Icons.Default.Verified,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                // Prominent LOG OUT button at the bottom
+                                Button(
+                                    onClick = { showLogoutDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp)
+                                        .testTag("settings_logout_button"),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    ),
+                                    border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.error)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ExitToApp,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "LOG OUT",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                }
+
+                                // Secondary Delete Account
+                                TextButton(
+                                    onClick = { showDeleteAccountDialog = true },
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                ) {
+                                    Text(
+                                        text = "Delete Account & Cloud Data",
+                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                            else -> {
+                                Text(
+                                    text = "Playing as Guest",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "Sign in to backup your records, sync credits across devices, and compete on the global leaderboard.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                GamingButton(
+                                    text = "SIGN IN WITH GOOGLE",
+                                    onClick = onNavigateToLogin,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    testTag = "settings_google_sign_in_button"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
 
@@ -585,13 +704,13 @@ fun SettingsScreen(
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
                 title = { Text("Log Out") },
-                text = { Text("Are you sure you want to log out? Your cloud data will remain safely stored.") },
+                text = { Text("Are you sure you want to log out? Your cloud data and high scores will remain safely stored.") },
                 confirmButton = {
                     TextButton(onClick = {
                         showLogoutDialog = false
                         authManager.logout()
                     }) {
-                        Text("LOG OUT", color = MaterialTheme.colorScheme.error)
+                        Text("LOG OUT", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -619,7 +738,7 @@ fun SettingsScreen(
                             }
                         }
                     }) {
-                        Text("DELETE", color = MaterialTheme.colorScheme.error)
+                        Text("DELETE", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -641,7 +760,7 @@ fun SettingsScreen(
                         onResetRecords()
                         scope.launch { snackbarHostState.showSnackbar("Records have been reset.") }
                     }) {
-                        Text("RESET", color = MaterialTheme.colorScheme.error)
+                        Text("RESET", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
@@ -663,20 +782,38 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
-        letterSpacing = 1.sp,
-        modifier = Modifier.padding(top = 8.dp)
-    )
+private fun SectionHeader(
+    icon: ImageVector,
+    title: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.ExtraBold,
+            color = MaterialTheme.colorScheme.primary,
+            letterSpacing = 1.sp
+        )
+    }
 }
 
 @Composable
 private fun SettingSwitchRow(
+    icon: ImageVector,
     label: String,
+    subtitle: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -685,11 +822,32 @@ private fun SettingSwitchRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 11.sp
+                )
+            }
+        }
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,

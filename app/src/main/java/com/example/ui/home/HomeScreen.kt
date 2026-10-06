@@ -291,7 +291,7 @@ fun HomeScreen(
 
                 // Credit Store Button with Gold Coin & Card Icon
                 GamingButton(
-                    text = "CREDIT STORE & CARDS",
+                    text = "CREDIT STORE",
                     onClick = onStoreClick,
                     icon = Icons.Default.Storefront,
                     isGold = true,

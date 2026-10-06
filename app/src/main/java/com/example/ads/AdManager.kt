@@ -46,8 +46,8 @@ class AdManager(private val context: Context) {
                 // Preload interstitial only; rewarded ad is loaded lazily on demand
                 loadInterstitialAd()
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "AdMob initialization error", e)
+        } catch (t: Throwable) {
+            Log.w(TAG, "AdMob initialization handled: ${t.message}")
         }
     }
 
